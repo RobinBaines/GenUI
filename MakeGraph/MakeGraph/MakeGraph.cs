@@ -1,4 +1,12 @@
-﻿using System;
+﻿
+////////////////////////////////////////////////////////////////////
+//Copyright @2012 Robin Baines
+//MakeGraph.
+//Generate graph of tables views and datasets.
+//The 5th paramter changes the output. Using MDG means make a directed graph file for use by Bunch. 
+//Anything but MDG means ouput is a dot file.
+////////////////////////////////////////////////////////////////////
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.SqlServer.Management.Common;
@@ -8,79 +16,92 @@ using System.Collections.ObjectModel;
 using System.Drawing;
 using GenLib;
 
-
 namespace MakeGraph
 {
     class MakeGraph
     {
         static String strDatabase;
-        static string strApplication;
+        static string strHighLight;
         static string strApplicationPath;
+        static string strServer;
+        static string strOutput;
+        static bool blnWait;
         static void Main(string[] args)
         {
-            List<string> NotIncluded = new List<string>();
-            NotIncluded.Add("b_app_parameters");
-            NotIncluded.Add("b_app_color");
+            bool blnRemoveUtilities = false;
+            strOutput = "";
+            blnWait = true;
+            if (args == null || args.Length < 4)
+            {
+                strOutput = "MDG";  //MDG means just make a directed graph file. Not MDG is a dot file.
+                if (strOutput.ToUpper() != "MDG")Console.WriteLine("/*MakeGraph  server database applicationpath  highlight*/"); // Check for null array
+                strDatabase = "longshort2";
+                strHighLight = "vComponent";
+                strServer = "RPB4\\SQLDEV";
+                //Server server = new Server("RPB4");
+                //strApplicationPath = "d:\\projects\\AppsWild\\WorkingCopy\\MRPTool\\MRPTool_GUI\\LS\\";
+                strApplicationPath = "NO";
+                
+            }
+            else
+            {
+                blnWait = false;
+                strServer = args[0];
+                strDatabase = args[1];
+                strApplicationPath = args[2];
+                strHighLight = args[3];
+                if (args.Length > 4)
+                    strOutput = args[4];
+            }
 
-
-            strDatabase = "longshort2";
-            strApplication = "MRPTool";
-            Server server = new Server("RPB4\\SQLDEV");
-            strApplicationPath = "d:\\projects\\AppsWild\\WorkingCopy\\MRPTool\\MRPTool_GUI\\LS\\";
-            bool blnRemoveUtilities = true;
-
-            //strDatabase = "rap2";
-            //strApplication = "rap2";
-            //Server server = new Server("RPB4");
-            //strApplicationPath = "d:\\projects\\AppsWild\\WorkingCopy\\RAP\\RAP_GUI\\RAP\\";
-            //bool blnRemoveUtilities = true;
-
-            //strDatabase = "Utilities";
-            //strApplication = "TestApp";
-            //Server server = new Server("RPB4");
-            //strApplicationDirectory = "d:\\projects\\AppsLibs\\WorkingDirectory\\Libs\\Utilities\\";
-            //bool blnRemoveUtilities = false;
-
-            DatabaseCollection dbs = server.Databases;
-            XsdFiles xsdFiles = new XsdFiles(strApplicationPath);
-            Console.WriteLine("digraph " + strDatabase + " {");
-
+            if (strOutput.ToUpper() != "MDG")
+                Console.WriteLine("/* server = " + strServer + " database = " + strDatabase + " applicationpath = " + strApplicationPath + " highlight = " + strHighLight + "*/");
+            Server server = new Server(strServer);
+                           
+             DatabaseCollection dbs = server.Databases;
+             XsdFiles xsdFiles= new XsdFiles(strApplicationPath);
+            
             //allow lines with same destination to merge.
-            Console.WriteLine("concentrate = true;");
+            //Console.WriteLine("concentrate = true;");
 
-            //vertical rank separation. 1.0 is default.
-            Console.WriteLine("ranksep = \"1.5 equally\";");
 
+            if (strOutput.ToUpper() != "MDG")
+            {
+                Console.WriteLine("digraph " + strDatabase + " {");
+                //vertical rank separation. 1.0 is default.
+                Console.WriteLine("ranksep = \"1.5 equally\";");
+
+                //highlight this node.
+                if (strHighLight.ToUpper() != "NO")
+                    Console.WriteLine(strHighLight + " [shape = polygon, sides = 5, peripheries = 3, color = lightblue, style = filled];");
+            }
             Database db = dbs[strDatabase];
             foreach (Table t in db.Tables)
             {
-                //Console.WriteLine("Testing " + t.Name);
                 if (IsUtility(blnRemoveUtilities, t.Name)==false)
                 {
-                    Console.WriteLine(strDatabase + " -> " + t.Name + ";");
-                    ConnectedViews(db, t.Name, true);
-                    ConnectedDataSets(xsdFiles, t.Name);
-                }
+                    //just write the name of the able so that it is shown even if not used further.
+                    if (strOutput.ToUpper() != "MDG") Console.WriteLine(t.Name.Replace(' ', '_').Replace('$', '_') + ";");
 
-//               Console.WriteLine(t.Name);
+                    ConnectedViews(db, t.Name, true);
+                        ConnectedDataSets(xsdFiles, t.Name);
+                }
             }
 
             foreach (View t in db.Views)
             {
                 if (t.IsSystemObject == false)
                 {
+                    //just write the name of the able so that it is shown even if not used further.
+                    if (strOutput.ToUpper() != "MDG") Console.WriteLine(t.Name.Replace(' ', '_').Replace('$', '_') + ";");
                     ConnectedViews(db, t.Name, false);
-                    if (strApplicationPath.Length > 0)
-                    {
-                        ConnectedDataSets(xsdFiles, t.Name);
-                    }
+                    ConnectedDataSets(xsdFiles, t.Name);
                 }
             }
             server.ConnectionContext.Disconnect();
-            Console.WriteLine(" }");
+            if (strOutput.ToUpper() != "MDG")Console.WriteLine(" }");
             //Console.WriteLine("Press any key.");
-            Console.ReadKey();
-           
+            if(blnWait == true)Console.ReadKey();
         }
 
             
@@ -94,6 +115,7 @@ namespace MakeGraph
         static void ConnectedViews(Database db, string parent, bool ParentIsTable)
         {
             string strParent = parent.ToUpper();
+            string Output_parent = parent.Replace(' ', '_').Replace('$', '_');
             foreach (View t in db.Views)
             {
                 if (t.IsSystemObject == false)
@@ -101,7 +123,7 @@ namespace MakeGraph
                     if (t.Name != parent && t.TextBody.ToUpper().Contains(parent.ToUpper()))
                     {
                         string strTables = t.TextBody.ToUpper();
-                        int iFrom = strTables.LastIndexOf("FROM");
+                        int iFrom = strTables.IndexOf("FROM");
                         if (iFrom >= 0)
                         {
                             strTables = strTables.Substring(iFrom);
@@ -109,11 +131,18 @@ namespace MakeGraph
                             foreach (string strT in fields)
                                 if (strT == strParent || strT.Replace(" ", "") == "[" + strParent + "]")
                                 {
-                                   if (ParentIsTable)
-                                       Console.WriteLine(parent + " -> " + t.Name + "[style=bold, color=blue];");
-                                   else
-                                        Console.WriteLine(parent + " -> " + t.Name + ";");
-                                    
+                                    string Output_Name = t.Name.Replace(' ', '_').Replace('$', '_');
+                                    if (strOutput.ToUpper() == "MDG")
+                                    {
+                                        Console.WriteLine(Output_parent + " " + Output_Name);
+                                    }
+                                    else
+                                    {
+                                        if (ParentIsTable)
+                                            Console.WriteLine(Output_parent + " -> " + Output_Name + "[style=bold, color=blue];");
+                                        else
+                                            Console.WriteLine(Output_parent + " -> " + Output_Name + ";");
+                                    }
 
                                     break;
                                 }
@@ -125,12 +154,19 @@ namespace MakeGraph
 
         static private void ConnectedDataSets(XsdFiles xsdFiles, string strTable)
         {
-            if (strApplicationPath.Length > 0)
+            if (strApplicationPath.Length > 0 && strApplicationPath.ToUpper() != "NO")
             {
                 foreach (XsdFile xsdF in xsdFiles.xsdFiles)
                 {
                     if (xsdF.findtable(strTable))
-                        Console.WriteLine(strTable + " -> " + xsdF.GetDataSetName() + "[style=bold, color=" + xsdF.GetColor() + "];"); 
+                        if (strOutput.ToUpper() == "MDG")
+                        {
+                            Console.WriteLine(strTable.Replace(' ', '_') + " " + xsdF.GetDataSetName());
+                        }
+                        else
+                        {
+                            Console.WriteLine(strTable.Replace(' ', '_') + " -> " + xsdF.GetDataSetName() + "[style=bold, color=" + xsdF.GetColor() + "];");
+                        }
                 }
             }
         }

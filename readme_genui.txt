@@ -1,0 +1,2 @@
+run\genui localhost Utilities d:\projects\AppsLibs\WorkingDirectory\Libs\Utilities\ d:\projects\GenUI\OUTPUT\
+run\genui RPB4 rap2 d:\projects\AppsWild\WorkingCopy\RAP\RAP_GUI\RAP\ d:\projects\GenUI\OUTPUT\

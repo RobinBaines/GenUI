@@ -6,6 +6,7 @@ GenUI/bin/
 MakeGraph/MakeGraph/bin/
 MakeGraph/MakeGraph/obj/
 OUTPUT/
+RUN/
 
 #Files to ignore #
 

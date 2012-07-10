@@ -19,8 +19,8 @@ public class XsdFiles
             
       //20120608 Create the lists of tables required if an strApplicationDirectory is defined.
             List<string> strFiles = new List<string>();
-           
-            if (strApplicationPath.Length > 0)
+
+            if (strApplicationPath.Length > 0 && strApplicationPath.ToUpper() != "NO")
             {
                 int iCount = 0;
                 strFiles.AddRange(Directory.GetFiles(strApplicationPath, "*.Xsd"));
@@ -154,7 +154,7 @@ public class XsdFiles
             if (iONr % 7 == 2)
                 return Color.Brown;
             if (iONr % 7 == 3)
-                return Color.Bisque;
+                return Color.Tomato;
             if (iONr % 7 == 4)
                 return Color.RosyBrown;
             if (iONr % 7 == 5)
