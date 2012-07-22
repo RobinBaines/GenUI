@@ -1,6 +1,9 @@
 run\makegraph RPB4 rap2 d:\projects\AppsWild\WorkingCopy\RAP\RAP_GUI\RAP\ dCompType > RUN\OUTPUT\rap.gv
 dot -Tbmp RUN\OUTPUT\rap.gv -o RUN\OUTPUT\rap.bmp
 
+run\makegraph RPB4 utilities d:\projects\AppsLibs\WorkingDirectory\Libs\Utilities\ No > RUN\OUTPUT\utilities.gv
+dot -Tbmp RUN\OUTPUT\utilities.gv -o RUN\OUTPUT\utilities.bmp
+
 Use of the bunch tool.
 This creates and MDG file. Just parent child.
 run\makegraph RPB4\SQLDEV longshort2 d:\projects\AppsWild\WorkingCopy\MRPTool\MRPTool_GUI\LS\ vComponent MDG > RUN\OUTPUT\ls.mdg
@@ -19,8 +22,8 @@ dot -Tbmp RUN\OUTPUT\tpitrack.gv -o RUN\OUTPUT\tpitrack.bmp
 run\makegraph RPB4 ERPInterface d:\projects\AppsWild\WorkingCopy\LOP\LOP_GUI\LOPNet\ NO NO > RUN\OUTPUT\lopnet.gv
 dot -Tbmp RUN\OUTPUT\lopnet.gv -o RUN\OUTPUT\lopnet.bmp
 
-run\makegraph RPB4\SQLDEV gis c:\Users\Robin\GisProject\GIS_GUI\GIS\ NO NO > RUN\OUTPUT\gis.gv
-dot -Tbmp RUN\OUTPUT\gis.gv -o RUN\OUTPUT\gis.bmp
+run\makegraph RPB4\SQLDEV gis2 d:\projects\spits\GIS\gis-gui\GIS\ NO > RUN\OUTPUT\gis2.gv
+dot -Tbmp RUN\OUTPUT\gis2.gv -o RUN\OUTPUT\gis2.bmp
 
 
 

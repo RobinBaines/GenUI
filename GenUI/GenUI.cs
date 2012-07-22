@@ -646,12 +646,12 @@ namespace GenUI
                 {
                     Console.WriteLine("GenUI  server database applicationpath OutputDirectory");
                     strServer = "localhost";
-                                       //"RPB4\\SQLDEV";
+                             strServer = "RPB4\\SQLDEV";
                     //strDatabase = "batchcalc";
                     //strApplicationPath = "d:\\projects\\AppsWild\\WorkingCopy\\BCNet\\BCNet_GUI\\BCNet\\";
                     //strOutputDirectory = "d:\\projects\\GenUI\\OUTPUT\\";
                     strDatabase = "Utilities";
-                    strApplicationPath = "d:\\projects\\AppsLibs\\WorkingDirectory\\Libs\\Utilities\\";
+                    strApplicationPath = "d:\\projects\\AppsLibs\\libbaines\\Utilities\\";
                     strOutputDirectory = "d:\\projects\\GenUI\\OUTPUT\\";
                 }
             }
