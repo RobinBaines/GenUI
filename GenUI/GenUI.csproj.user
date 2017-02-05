@@ -4,6 +4,6 @@
     <StartArguments>RPB</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <StartArguments>RPB</StartArguments>
+    <StartArguments>RPB5\SQLDEV2012 gis2 c:\projects\spits\gis\gis-gui\gis\ c:\projects\GenUI\OUTPUT\</StartArguments>
   </PropertyGroup>
 </Project>

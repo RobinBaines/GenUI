@@ -4,6 +4,7 @@
 //GenUI.
 //Generate user interface in basic from database.
 //20091130 Added MaxLength
+//20130212 Add try catch over AdjustColumns.
 ////////////////////////////////////////////////////////////////////
 using System;
 using System.Collections.Generic;
@@ -199,6 +200,7 @@ namespace GenUI
             string strLastColumn = "";
 
             strW.WriteLine(" MyBase.Adjustcolumns(blnAdjustWidth)");
+            strW.WriteLine(" Try");
             foreach (Column c in t.Columns)
             {
 
@@ -250,9 +252,13 @@ namespace GenUI
                 strLastColumn = strDG + strColName;
             }
 
+
             strW.WriteLine("PutColumnsInGrid()");
             strW.WriteLine("AdjustDataGridWidth(blnAdjustWidth)");
             strW.WriteLine("RefreshCombos()");
+             strW.WriteLine("    Catch ex As Exception");
+            strW.WriteLine("MsgBox(ex.Message)");
+            strW.WriteLine("End Try");
             strW.WriteLine("End Sub");
             
             strW.WriteLine("Public Overrides Sub RefreshCombos()");
@@ -462,18 +468,24 @@ namespace GenUI
                 strW.WriteLine("InitializeComponent()");
                 strW.WriteLine("End Sub");
 
-                strW.WriteLine("Public Sub New(ByVal tsb As ToolStripButton _");
-                strW.WriteLine(", ByVal strSecurityName As String, ByVal strParentName As String, ByVal _MainDefs As MainDefinitions, _");
+
+            //20130123 Added strForm parameter to the New generic form call.
+                strW.WriteLine("Public Sub New(ByVal tsb As ToolStripItem _");
+                strW.WriteLine(", ByVal strForm As String, ByVal strParentName As String, ByVal _MainDefs As MainDefinitions, _");
                 strW.WriteLine("Fields as Dictionary(Of String, String), _blnFullSize as Boolean, _bRO as boolean, blnFilter as boolean)");
-                strW.WriteLine("MyBase.New(tsb, strParentName, _MainDefs, Fields, _blnFullSize, _bRO)");
+                strW.WriteLine("MyBase.New(tsb, strForm, strParentName, _MainDefs, Fields, _blnFullSize, _bRO)");
                 strW.WriteLine("InitializeComponent()");
-                if (blnIncludeDataSetInClassName == true) strW.WriteLine("vParent = New " + TheDataSet + "_" + strTable + "(strSecurityName, Me.bsParent, Me.dgParent, _");
-                else strW.WriteLine("vParent = New " + strTable + "(strSecurityName, Me.bsParent, Me.dgParent, _");
+                if (blnIncludeDataSetInClassName == true) strW.WriteLine("vParent = New " + TheDataSet + "_" + strTable + "(strForm, Me.bsParent, Me.dgParent, _");
+                else strW.WriteLine("vParent = New " + strTable + "(strForm, Me.bsParent, Me.dgParent, _");
 
                 strW.WriteLine("taParent, _");
                 strW.WriteLine("Me." + TheDataSet+ ", _");
                 strW.WriteLine("Me._components, _");
                 strW.WriteLine("_MainDefs, blnRO, Me.Controls, Me, blnFilter)");
+
+                //20151111Added these as they are no longer needed.
+                strW.WriteLine("Me.SwitchOffPrint()");
+                strW.WriteLine("Me.SwitchOffUpdate()");
                 //20120531 No longer needed when blnFilter is in New. strW.WriteLine("vParent.CreateFilterBoxes(Me.Controls)");
                 strW.WriteLine("End Sub");
                 strW.WriteLine("#End Region");
@@ -577,86 +589,12 @@ namespace GenUI
         static bool blnIncludeDataSetInClassName = true;
         static void Main(string[] args)
         {
-
             blnIncludeDataSetInClassName = true;
 
-            Server server;  // = new Server("localhost");
-            //Server server = new Server("RPB4\\SQLDEV");
-            
-
-            //20120608 Set a reference to the project directory in order to check whether tables or views are needed for the application.
-            //Fill with "" if this check is not required.
-           
-           
-            //strDatabase = "HWE";
-            // strDatabase = "TPIData";
-            //strDatabase = "MulCh";
-            //strDatabase = "TPIDataClient";
-            //strApplication = "TPINet";
-            //iVersion = 2;
-            //blnDoViews = false;
-            //blnDoTables = false;
-            //strDatabase = "CJPT";
-            //strDatabase = "ABC";
-      
-            //strDatabase = "RED2";
-            //strApplication = "RED";
-
-            
-            //strDatabase = "KMAP";
-            //strDatabase = "GRASSEMES";
-            //strApplication = "VIA";
-            //strDatabase = "RAP2";
-            //strApplication = "RAP";
-            //strDatabase = "dispensercheck";
-
-            //strDatabase = "TPIDataClient";
-            //strDatabase = "TekLogixForce";
-            //strApplication = "SFC";
-           // strDatabase = "ERPInterface";
-            //strApplication = "LOPNet"; 
-            //iVersion= 3;
-
-            //strDatabase = "gis";
-            //strApplication = "";
-     
-
-            //Define the application name for reference to the dataset.
-            //if (strApplication.Length == 0)
-            //    strApplication = strDatabase;
-            
-            //except for Utilities
-           //strDatabase = "Utilities";
-           //strApplicationPath = "d:\\projects\\AppsLibs\\WorkingDirectory\\Libs\\Utilities\\";
-            //strDatabase = "longshort2";
-            //Server server = new Server("RPB4");
-            //strApplicationPath = "d:\\projects\\AppsWild\\WorkingCopy\\MRPTool\\MRPTool_GUI\\LS\\";
-
-
-           //strDatabase = "longshort2";
-           //strApplication = "MRPTool";
-           //strApplicationPath = "d:\\projects\\AppsWild\\WorkingCopy\\MRPTool\\MRPTool_GUI\\LS\\";
-
+            Server server;  
             string strApplicationPath="";
-            string strOutputDirectory = "d:\\projects\\GenUI\\OUTPUT\\";
+            string strOutputDirectory;
             string strServer = "";
-            if (args.Length == 1)
-            {
-                if (args[0] == "RPB")   //running from ide using these parameters
-                {
-                    Console.WriteLine("GenUI  server database applicationpath OutputDirectory");
-                    strServer = "localhost";
-                             strServer = "RPB4\\SQLDEV";
-                    //strDatabase = "batchcalc";
-                    //strApplicationPath = "d:\\projects\\AppsWild\\WorkingCopy\\BCNet\\BCNet_GUI\\BCNet\\";
-                    //strOutputDirectory = "d:\\projects\\GenUI\\OUTPUT\\";
-                    strDatabase = "Utilities";
-                    strApplicationPath = "d:\\projects\\AppsLibs\\libbaines\\Utilities\\";
-                    strOutputDirectory = "d:\\projects\\GenUI\\OUTPUT\\";
-                }
-            }
-            else
-            {
                 if (args == null || args.Length < 3)
                 {
                     Console.WriteLine("GenUI  server database applicationpath OutputDirectory");
@@ -669,24 +607,28 @@ namespace GenUI
                     strApplicationPath = args[2];
                     strOutputDirectory = args[3];
                 }
-            }
+            //}
+
+            //Make a list of all the xsd files with a list of the tables and views in each one.
+            //These are used to identify which tables and views in the database should generate code.
             XsdFiles xsdFiles = new XsdFiles(strApplicationPath);
+
+
             server = new Server(strServer);
             DatabaseCollection dbs = server.Databases;
-            Database db = dbs[strDatabase];    //Database db = dbs["LONGSHORT2"];
-            Dictionary<string, string> CreateAs = new Dictionary<string, string>();
+            Database db = dbs[strDatabase];   
+            //Dictionary<string, string> CreateAs = new Dictionary<string, string>();
 
                 StreamWriter strW;
                 Console.WriteLine(db.Name);
-                //if (blnDoTables == true)
-                {
+
+            //Iterate through the database tables.
                     foreach (Table t in db.Tables)
                     {
                         try
                         {
                             {
-                              // if (t.Name == "Storage Loc")
-                                
+                              
                                 {
                                     //only check if file is needed if the strApplicationDirectory is defined.
                                     if (strApplicationPath.Length > 0)
@@ -710,12 +652,10 @@ namespace GenUI
                     lookups.strCreateOpenForm(db, strW);
                     strW.Close();
                     strW = null;
-                }
+                
 
-                //if (blnDoViews == true)
-                {
+                //Iterate through the database views.
                     foreach (View t in db.Views)
-                    {
                         if (t.IsSystemObject == false)
                         {
                             try
@@ -741,8 +681,8 @@ namespace GenUI
                             {
                             }
                         }
-                    }
-                }
+
+
 
                 ////Create list of all column names.
                 ////Renamed to aaa... to prevent copying over project versions.

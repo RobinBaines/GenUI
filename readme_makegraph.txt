@@ -22,9 +22,13 @@ dot -Tbmp RUN\OUTPUT\tpitrack.gv -o RUN\OUTPUT\tpitrack.bmp
 run\makegraph RPB4 ERPInterface d:\projects\AppsWild\WorkingCopy\LOP\LOP_GUI\LOPNet\ NO NO > RUN\OUTPUT\lopnet.gv
 dot -Tbmp RUN\OUTPUT\lopnet.gv -o RUN\OUTPUT\lopnet.bmp
 
-run\makegraph RPB4\SQLDEV gis2 d:\projects\spits\GIS\gis-gui\GIS\ NO > RUN\OUTPUT\gis2.gv
-dot -Tbmp RUN\OUTPUT\gis2.gv -o RUN\OUTPUT\gis2.bmp
+run\makegraph RPB5\SQLDEV2012 gis2 c:\projects\spits\GIS\gis-gui\GIS\ NO > RUN\OUTPUT\gis2.gv
+c:\Projects\GraphViz\bin\dot -Tbmp RUN\OUTPUT\gis2.gv -o RUN\OUTPUT\gis2.bmp
 
+c:\Projects\GraphViz\bin\dot -Tbmp RUN\OUTPUT\AISDataSet.txt -o RUN\OUTPUT\AISDataSet.bmp
+c:\Projects\GraphViz\bin\dot -Tbmp RUN\OUTPUT\ActivityDataSet.txt -o RUN\OUTPUT\ActivityDataSet.bmp
+c:\Projects\GraphViz\bin\dot -Tbmp RUN\OUTPUT\StockDataSet.txt -o RUN\OUTPUT\StockDataSet.bmp
+c:\Projects\GraphViz\bin\dot -Tbmp RUN\OUTPUT\MedicationDataSet.txt -o RUN\OUTPUT\MedicationDataSet.bmp
 
 
 
@@ -51,3 +55,16 @@ Existing path is
 run\makegraph RPB4 utilities d:\projects\AppsLibs\WorkingDirectory\Libs\Utilities\ nothing MDG > RUN\OUTPUT\utility.mdg
 dot -Tbmp RUN\OUTPUT\utility.mdg.dot -o RUN\OUTPUT\utility.bmp
 
+
+run\makegraph RPB5\SQLDEV2012 rap2 c:\Projects\AppsWild\WorkingCopy\RAP\RAP_GUI\RAP\ NO > RUN\OUTPUT\rap2.gv
+c:\Projects\GraphViz\bin\dot -Tbmp RUN\OUTPUT\rap2.gv -o RUN\OUTPUT\rap2.bmp
+
+
+c:\Projects\GraphViz\bin\sfdp.exe -o c:\Projects\GenUI\RUN\OUTPUT\rap2out.gv c:\Projects\GenUI\RUN\OUTPUT\rap2.gv
+
+c:\Projects\GraphViz\bin\smyrna.exe c:\Projects\GenUI\RUN\OUTPUT\rap2out.gv 
+c:\Projects\GraphViz\bin\smyrna.exe c:\Projects\GenUI\RUN\OUTPUT\gis2out.gv 
+
+run\makegraph RPB5\SQLDEV2012 rap2 c:\Projects\AppsWild\WorkingCopy\RAP\RAP_GUI\RAP\ NO JS > RUN\OUTPUT\rap2.js
+run\makegraph RPB5\SQLDEV2012 gis2 c:\projects\spits\GIS\gis-gui\GIS\ NO JS > WebA1\GraphData.js
+run\makegraph RPB5\SQLDEV2012 rap2 c:\Projects\AppsLibs\libbaines\ NO JS > RUN\OUTPUT\utilities.js
