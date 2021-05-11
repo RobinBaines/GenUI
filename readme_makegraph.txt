@@ -68,3 +68,5 @@ c:\Projects\GraphViz\bin\smyrna.exe c:\Projects\GenUI\RUN\OUTPUT\gis2out.gv
 run\makegraph RPB5\SQLDEV2012 rap2 c:\Projects\AppsWild\WorkingCopy\RAP\RAP_GUI\RAP\ NO JS > RUN\OUTPUT\rap2.js
 run\makegraph RPB5\SQLDEV2012 gis2 c:\projects\spits\GIS\gis-gui\GIS\ NO JS > WebA1\GraphData.js
 run\makegraph RPB5\SQLDEV2012 rap2 c:\Projects\AppsLibs\libbaines\ NO JS > RUN\OUTPUT\utilities.js
+run\makegraph BAINESLENOVO SVP2 c:\projects\SVP\GUI\SVP\ NO JS > WebA1\GraphData.js
+run\makegraph BAINESLENOVO CAT c:\projects\cocoa\GUI\CAT\ NO JS > WebA1\GraphData.js

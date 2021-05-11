@@ -5,6 +5,7 @@
 //Generate user interface in basic from database.
 //20091130 Added MaxLength
 //20130212 Add try catch over AdjustColumns.
+//20170907 Change default value for Bits to true or false. 
 ////////////////////////////////////////////////////////////////////
 using System;
 using System.Collections.Generic;
@@ -27,17 +28,23 @@ namespace GenUI
 
         static Table strGetTable(Database db, string strTableName)
         {
-            foreach (Table t in db.Tables)
+            foreach (Table theTable in db.Tables)
             {
-                if (t.Name == strTableName)
-                    return t;
+                if (theTable.Name == strTableName)
+                    return theTable;
             }
             return null;
         }
         /// <summary>
         /// Create a file to define the columns to be dispayed in a datagrid.
         /// </summary>
-        static string strCreateTableFile(Database db, StreamWriter strW, TableViewBase t, bool blnView, string strTable, string strDG, string TheDataSet)
+        static string strCreateTableFile(Database db,
+            StreamWriter strW, 
+            TableViewBase theTables, 
+            bool blnView, 
+            string strTable, 
+            string strDG, 
+            string TheDataSet)
         {
             //if (strTable == "b_machine_medication_list")
             {
@@ -60,6 +67,13 @@ namespace GenUI
             else strW.WriteLine("Public Class " + strTable);
 
             strW.WriteLine("Inherits dgColumns");
+
+            //if the object contains comboboxes then it must implement disposable.
+            if (theTables.Columns.Count != 0 && blnView == false)
+            {
+                strW.WriteLine("Implements IDisposable");
+            }
+
             Console.WriteLine(" Table: " + strTable);
             //Console.WriteLine("  Columns: ");
             string strLastReferencedTable = "";
@@ -67,15 +81,15 @@ namespace GenUI
             try
             {
             //Declare the DataGrid Columns.
-            foreach (Column c in t.Columns)
+            foreach (Column theColumn in theTables.Columns)
             {
 
-                strColName = c.Name.Replace("-", "_").Replace(" ", "_").Replace("%", "_");
-                if (blnView == false && ut.strGetReferencedTable((Table)t, c).Length != 0)
+                strColName = theColumn.Name.Replace("-", "_").Replace(" ", "_").Replace("%", "_");
+                if (blnView == false && ut.strGetReferencedTable((Table)theTables, theColumn).Length != 0)
                     strW.WriteLine("Friend WithEvents " + strDG + strColName + " As System.Windows.Forms.DataGridViewComboBoxColumn");
                 else
                 {
-                    if (ut.blnIsBoolean(c) == true)
+                    if (ut.blnIsBoolean(theColumn) == true)
                         strW.WriteLine("Friend WithEvents " + strDG + strColName + " As System.Windows.Forms.DataGridViewCheckBoxColumn");
                     else
                         strW.WriteLine("Friend WithEvents " + strDG + strColName + " As System.Windows.Forms.DataGridViewTextBoxColumn");
@@ -83,13 +97,13 @@ namespace GenUI
             }
                        
             //Create binding sources to combobox dropdown tables.
-            foreach (Column c in t.Columns)
+            foreach (Column theColumn in theTables.Columns)
                 {
                     //Replace underscores in field names as they generate errors in generated code.
-                    strColName = c.Name.Replace("-", "_").Replace(" ", "_").Replace("%", "_");
+                    strColName = theColumn.Name.Replace("-", "_").Replace(" ", "_").Replace("%", "_");
                     string strReferencedTable = "";
                     if (blnView == false) 
-                        strReferencedTable = ut.strGetReferencedTable((Table)t, c).Replace("-", "_").Replace(" ", "_").Replace("%", "_");
+                        strReferencedTable = ut.strGetReferencedTable((Table)theTables, theColumn).Replace("-", "_").Replace(" ", "_").Replace("%", "_");
 
                     if (strReferencedTable.Length != 0)
                     {
@@ -123,7 +137,7 @@ namespace GenUI
                 try
                 {
                 Table aTable;
-                aTable = (Table)t;
+                aTable = (Table)theTables;
                 string strPK = ut.strGetPK(aTable);
                 string[] strPKs = strPK.Split(new Char[] { '.' });
                 if (strPKs.Length > 0)
@@ -138,20 +152,19 @@ namespace GenUI
             }
 
             strW.WriteLine("_ta.Connection.ConnectionString = GetConnectionString()");
-         
-                //Create the combobox dropdown tableadapters.
+            //the combo box objects.
             try
             {
                 strLastReferencedTable = "";
-                foreach (Column c in t.Columns)
+                foreach (Column theColumn in theTables.Columns)
                 {
                     //Replace underscores in field names as they generate errors in generated code.
-                    strColName = c.Name.Replace("-", "_").Replace(" ", "_").Replace("%", "_");
+                    strColName = theColumn.Name.Replace("-", "_").Replace(" ", "_").Replace("%", "_");
                     string strReferencedTable = "";
                     string strRefTable = "";
                     if (blnView == false)
                     {
-                        strRefTable = ut.strGetReferencedTable((Table)t, c).Replace("-", "_");
+                        strRefTable = ut.strGetReferencedTable((Table)theTables, theColumn).Replace("-", "_");
                         strReferencedTable = strRefTable.Replace(" ", "_").Replace("%", "_");
                     }
                     if (strReferencedTable.Length != 0)
@@ -160,34 +173,29 @@ namespace GenUI
                         {
                             strLastReferencedTable = strReferencedTable;
                             strW.WriteLine("Me.bs" + strReferencedTable + " = New System.Windows.Forms.BindingSource(_components)");
-                            strW.WriteLine(strReferencedTable + "TableAdapter = New " + TheDataSet + "TableAdapters." + strReferencedTable + "TableAdapter");
-
-                            //20081126 Modify the connection string using a dgcolumns function.
-                            strW.WriteLine(strReferencedTable + "TableAdapter.Connection.ConnectionString = GetConnectionString()");
-                            strW.WriteLine("Me.bs" + strReferencedTable + ".DataMember = \"" + strRefTable + "\"");
-                            strW.WriteLine("Me.bs" + strReferencedTable + ".DataSource = ds");
                         }
                     }
                 }
             }
             catch { }   //if a view
+
             strW.WriteLine("End Sub");
             
             //Make the CreateColumns call.
             strW.WriteLine("Public Overrides Sub Createcolumns()");
-            foreach (Column c in t.Columns)
+            foreach (Column theColumns in theTables.Columns)
             {
                 //Replace underscores in field names as they generate errors in generated code.
-                strColName = c.Name.Replace("-", "_").Replace(" ", "_").Replace("%", "_");
+                strColName = theColumns.Name.Replace("-", "_").Replace(" ", "_").Replace("%", "_");
                 string strReferencedTable = "";
                 if (blnView == false)
-                    strReferencedTable = ut.strGetReferencedTable((Table)t, c).Replace("-", "_").Replace(" ", "_").Replace("%", "_");
+                    strReferencedTable = ut.strGetReferencedTable((Table)theTables, theColumns).Replace("-", "_").Replace(" ", "_").Replace("%", "_");
 
                 if (strReferencedTable.Length != 0)
                     strW.WriteLine(strDG + strColName + " = New System.Windows.Forms.DataGridViewComboBoxColumn");
                 else
                 {
-                    if (ut.blnIsBoolean(c) == true)
+                    if (ut.blnIsBoolean(theColumns) == true)
                         strW.WriteLine(strDG + strColName + " = New System.Windows.Forms.DataGridViewCheckBoxColumn");
                     else
                         strW.WriteLine(strDG + strColName + " = New System.Windows.Forms.DataGridViewTextBoxColumn");
@@ -201,10 +209,43 @@ namespace GenUI
 
             strW.WriteLine(" MyBase.Adjustcolumns(blnAdjustWidth)");
             strW.WriteLine(" Try");
-            foreach (Column c in t.Columns)
+
+            //the combo box objects.
+            try
+            {
+                strLastReferencedTable = "";
+                foreach (Column theColumn in theTables.Columns)
+                {
+                    //Replace underscores in field names as they generate errors in generated code.
+                    strColName = theColumn.Name.Replace("-", "_").Replace(" ", "_").Replace("%", "_");
+                    string strReferencedTable = "";
+                    string strRefTable = "";
+                    if (blnView == false)
+                    {
+                        strRefTable = ut.strGetReferencedTable((Table)theTables, theColumn).Replace("-", "_");
+                        strReferencedTable = strRefTable.Replace(" ", "_").Replace("%", "_");
+                    }
+                    if (strReferencedTable.Length != 0)
+                    {
+                        if (strLastReferencedTable != strReferencedTable)
+                        {
+                            strLastReferencedTable = strReferencedTable;
+                            strW.WriteLine(strReferencedTable + "TableAdapter = New " + TheDataSet + "TableAdapters." + strReferencedTable + "TableAdapter");
+
+                            //20081126 Modify the connection string using a dgcolumns function.
+                            strW.WriteLine(strReferencedTable + "TableAdapter.Connection.ConnectionString = GetConnectionString()");
+                            strW.WriteLine("Me.bs" + strReferencedTable + ".DataMember = \"" + strRefTable + "\"");
+                            strW.WriteLine("Me.bs" + strReferencedTable + ".DataSource = ds");
+                        }
+                    }
+                }
+            }
+            catch { }   //if a view
+
+            foreach (Column theColumn in theTables.Columns)
             {
 
-                strColName = c.Name.Replace("-", "_").Replace(" ", "_").Replace("%", "_");
+                strColName = theColumn.Name.Replace("-", "_").Replace(" ", "_").Replace("%", "_");
 
                 //DECIDED NOT TO USE ExtendedProperty use separate lookup object instead.
                 //if (blnExtendedProperty(c, "print", "No"))
@@ -213,11 +254,11 @@ namespace GenUI
                 //Give fields which refer to a parent table a different colour.
                 string strReferencedTable = "";
                 if (blnView == false)
-                    strReferencedTable = ut.strGetReferencedTable((Table)t, c).Replace("-", "_").Replace(" ", "_").Replace("%", "_");
+                    strReferencedTable = ut.strGetReferencedTable((Table)theTables, theColumn).Replace("-", "_").Replace(" ", "_").Replace("%", "_");
                 
                 //The ReadOnly and visible must resp should be false if the field is an identity.
                 string strROVisible = "MainDefs.blnGetRO(blnRO, \"" + strColName + "\"), ";
-                if (c.Identity == true)
+                if (theColumn.Identity == true)
                     strROVisible = "true, ";
 
                 if (strReferencedTable.Length != 0)   //this fails for a view so only do for a table.
@@ -234,11 +275,11 @@ namespace GenUI
                         //otherwise use the PK. (This latter is needed because HWE may have 2 separate fields each as FK to other table.
                         //and in this case each field will have a different name.
                         if (strReferencedColumn.Contains(".") == true)
-                            strReferencedColumn = c.Name;
+                            strReferencedColumn = theColumn.Name;
                        
                         strW.WriteLine("DefineComboBoxColumn(" + strDG + strColName +
-                        ", " + ut.strGetFormat(c, true) + ", True, \"" + c.Name +
-                        "\", \"\", FieldWidths." + ut.strGetWidth(c) + ", blnRO, true, \"\", " +
+                        ", " + ut.strGetFormat(theColumn, true) + ", True, \"" + theColumn.Name +
+                        "\", \"\", FieldWidths." + ut.strGetWidth(theColumn) + ", blnRO, true, \"\", " +
                         " bs" + strReferencedTable + ", \"" + strReferencedColumn + "\" ,\"" + strReferencedColumn + "\", Color.Lavender)");
                         strW.WriteLine("If blnRO = True Then " + strDG + strColName + ".DisplayStyle = DataGridViewComboBoxDisplayStyle.Nothing");
                     }
@@ -246,7 +287,7 @@ namespace GenUI
 
                     //c.Name instead of ColName to get the true SQL name including spaces.
                        strW.WriteLine("DefineColumn(" + strDG + strColName +
-                            ", \"" + c.Name +
+                            ", \"" + theColumn.Name +
                             "\", blnRO, ds." + strTable + "." + strColName + "Column.MaxLength)");
                     
                 strLastColumn = strDG + strColName;
@@ -268,13 +309,13 @@ namespace GenUI
             strW.WriteLine("MyBase.RefreshCombos()");
             strLastReferencedTable = "";
             int iComboCount = 0;
-            foreach (Column c in t.Columns)
+            foreach (Column theColumn in theTables.Columns)
             {
                 
                 //Replace underscores in field names as they generate errors in generated code.
                 string strReferencedTable = "";
                 if (blnView == false)
-                    strReferencedTable = ut.strGetReferencedTable((Table)t, c).Replace("-", "_").Replace(" ", "_").Replace("%", "_");
+                    strReferencedTable = ut.strGetReferencedTable((Table)theTables, theColumn).Replace("-", "_").Replace(" ", "_").Replace("%", "_");
 
                 if (strReferencedTable.Length != 0)
                 {
@@ -334,11 +375,11 @@ namespace GenUI
         bool blnDefaultsNeeded=false;
         //if (t.Name.ToLower() == "basistekeningen")
             {
-                foreach (Column c in t.Columns)
+                foreach (Column theColumn in t.Columns)
                 {
                     try  
                     {
-                        if (c.DefaultConstraint.Text.Length != 0) //can be null
+                        if (theColumn.DefaultConstraint.Text.Length != 0) //can be null
                         {
                             if (blnDefaultsNeeded == false)
                             {
@@ -347,13 +388,20 @@ namespace GenUI
                             }
 
                             //20120608 
-                            if (c.DataType.Name == DataType.Bit.Name)
+                            if (theColumn.DataType.Name == DataType.Bit.Name)
                             {
-                                strW.WriteLine(".Cells(\"" + c.Name + "\").Value =  " + c.DefaultConstraint.Text );
+                                //20170907 Change default value for Bits to true or false. 
+                                string Constraint ="false";
+                                if (theColumn.DefaultConstraint.Text.Contains("1"))
+                                    Constraint = "true";
+
+                                strW.WriteLine(".Cells(\"" + theColumn.Name + "\").Value =  " + Constraint);
                             }
                             else
                             {
-                                strW.WriteLine(".Cells(\"" + c.Name + "\").Value =  " + c.DefaultConstraint.Text );
+                                string default_string = theColumn.DefaultConstraint.Text;
+                                if (default_string.Contains("getdate")) default_string = "DateTime.Now()";
+                                strW.WriteLine(".Cells(\"" + theColumn.Name + "\").Value =  " + default_string);
                             }
                         }
                     }
@@ -374,7 +422,9 @@ namespace GenUI
         /// <summary>
         /// Add the filter code to the column definition file.
         /// </summary>
-        static string strCreateFilterFile(StreamWriter strW, TableViewBase t, string strTable, string strDG)
+        static string strCreateFilterFile(StreamWriter strW, TableViewBase theTables, string strTable,
+                        bool blnView, 
+                        string strDG)
         {
             strW.WriteLine("#Region \"Filter\"");
             string strColName = "";
@@ -383,21 +433,21 @@ namespace GenUI
             strW.WriteLine("Public Overrides Sub CreateFilterBoxes(ByVal _Controls As Control.ControlCollection)");
             strW.WriteLine("MyBase.CreateFilterBoxes(_Controls)");
 
-            foreach (Column c in t.Columns)
+            foreach (Column theColumns in theTables.Columns)
             {
-                strSQLColName = c.Name.Replace("-", "_");
-                strColName = c.Name.Replace("-", "_").Replace(" ", "_").Replace("%", "_");
-                if (ut.blnIsBoolean(c) == true)
+                strSQLColName = theColumns.Name.Replace("-", "_");
+                strColName = theColumns.Name.Replace("-", "_").Replace(" ", "_").Replace("%", "_");
+                if (ut.blnIsBoolean(theColumns) == true)
                     strW.WriteLine("CreateACheckBox(cb" + strColName + "Find, \"" + strSQLColName + "\", AddressOf cbFind_CheckChanged, _Controls)");
                 else
                     strW.WriteLine("CreateAFilterBox(tb" + strColName + "Find, \"" + strSQLColName + "\", AddressOf tbFind_TextChanged, _Controls)");
             }
             strW.WriteLine("End Sub");
 
-            foreach (Column c in t.Columns)
+            foreach (Column theColumn in theTables.Columns)
             {
-                strColName = c.Name.Replace("-", "_").Replace(" ", "_").Replace("%", "_");
-                if (ut.blnIsBoolean(c) == true)
+                strColName = theColumn.Name.Replace("-", "_").Replace(" ", "_").Replace("%", "_");
+                if (ut.blnIsBoolean(theColumn) == true)
                     strW.WriteLine("Friend WithEvents cb" + strColName + "Find As System.Windows.Forms.CheckBox");
                 else
                     strW.WriteLine("Friend WithEvents tb" + strColName + "Find As System.Windows.Forms.TextBox");
@@ -409,6 +459,35 @@ namespace GenUI
             strW.WriteLine(" MakeFilter(False)");
             strW.WriteLine("End Sub");
             strW.WriteLine("#End Region");
+
+            //add the disposable code if there are comboboxes.
+            if (theTables.Columns.Count != 0 && blnView == false)
+            {
+                strW.WriteLine("");
+                strW.WriteLine("#Region \"IDisposable Support\"");
+                strW.WriteLine("Private disposedValue As Boolean ' To detect redundant calls");
+
+                strW.WriteLine("' IDisposable");
+                strW.WriteLine("Protected Overridable Sub Dispose(disposing As Boolean)");
+
+                strW.WriteLine("If Not Me.disposedValue Then");
+                strW.WriteLine(" If disposing Then");
+                strW.WriteLine("  If Not bsb_cassette_type Is Nothing Then");
+                strW.WriteLine("   bsb_cassette_type.Dispose()");
+                strW.WriteLine("  End If");
+                strW.WriteLine(" End If");
+                strW.WriteLine("End If");
+                strW.WriteLine("Me.disposedValue = True");
+                strW.WriteLine("End Sub");
+
+                strW.WriteLine(" ' This code added by Visual Basic to correctly implement the disposable pattern.");
+                strW.WriteLine("Public Sub Dispose() Implements IDisposable.Dispose");
+                strW.WriteLine("    ' Do not change this code.  Put cleanup code in Dispose(disposing As Boolean) above.");
+                strW.WriteLine("Dispose(True)");
+                strW.WriteLine("GC.SuppressFinalize(Me)");
+                strW.WriteLine("End Sub");
+                strW.WriteLine("#End Region");
+            }
             strW.WriteLine("End Class");
             return "";
         }
@@ -551,12 +630,20 @@ namespace GenUI
         {
             string strTableName = t.Name.Replace(" ", "_");
             StreamWriter strW;
-            strW = new StreamWriter(strOutputDirectory + "gen_" + strDataSet + "_" + strTableName + ".vb");
+            strW = new StreamWriter(strOutputDirectory + "gen_combo" + strDataSet + "_" + strTableName + ".vb");
             strCreateTableFile(db, strW, t, false, strTableName, "dg", strDataSet);
             strCreateEditing(strW, t, strTableName, "dg", strDataSet);
-            strCreateFilterFile(strW, t, strTableName, "dg");
+            strCreateFilterFile(strW, t, strTableName, false, "dg");
             strW.Close();
             strW = null;
+
+            strW = new StreamWriter(strOutputDirectory + "gen_" + strDataSet + "_" + strTableName + ".vb");
+            strCreateTableFile(db, strW, t, true, strTableName, "dg", strDataSet);
+            strCreateEditing(strW, t, strTableName, "dg", strDataSet);
+            strCreateFilterFile(strW, t, strTableName, true, "dg");
+            strW.Close();
+            strW = null;
+
 
             strW = new StreamWriter(strOutputDirectory + "gen_Form_" + strDataSet + "_" + strTableName + ".vb");
             strCreateFormFile(db, strW, t, strTableName, "dg", t.Name, strDataSet);
@@ -571,7 +658,7 @@ namespace GenUI
             StreamWriter strW;
             strW = new StreamWriter(strOutputDirectory + "gen_" + strDataSet + "_" + strTableName + ".vb");
             strCreateTableFile(db, strW, t, true, strTableName, "dg", strDataSet);
-            strCreateFilterFile(strW, t, strTableName, "dg");
+            strCreateFilterFile(strW, t, strTableName, true, "dg");
             strW.Close();
             strW = null;
 

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <StartArguments>RPB</StartArguments>
+    <StartArguments>RPB5\SQLDEV2012 SVP2 c:\Projects\SVP\GUI\SVP\ c:\projects\GenUI\OUTPUT\</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <StartArguments>RPB5\SQLDEV2012 gis2 c:\projects\spits\gis\gis-gui\gis\ c:\projects\GenUI\OUTPUT\</StartArguments>

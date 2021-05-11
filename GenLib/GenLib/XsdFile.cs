@@ -1,6 +1,9 @@
-﻿//20120608 
+﻿////////////////////////////////////////////////////////////////////
+//Copyright @2008 Robin Baines
+//June - Oct 2008
 //Make a class to scan .Net xsd files for Table and view names.
 //It creates a list on initialisation and then checks whether a table or view is in the list.
+////////////////////////////////////////////////////////////////////
 using System;
 using System.Collections.Generic;
 using System.Text;
