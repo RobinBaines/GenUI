@@ -20,6 +20,7 @@ RUN/
 *.o
 *.so
 *.suo
+*.txt
 
 
 # Packages #
